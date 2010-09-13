@@ -56,7 +56,14 @@ void ChannelAccess::initialize( int stage )
     usePropagationDelay = par("usePropagationDelay");
 }
 
-
+void ChannelAccess::finish()
+{
+	if(cc == 0)
+		error("connectionmanager was not initialized module");
+	if(isRegistered)
+		cc->unregisterNic(getParentModule());
+	utility->unsubscribe(this, catMove);
+}
 
 void ChannelAccess::sendToChannel(cPacket *msg)
 {

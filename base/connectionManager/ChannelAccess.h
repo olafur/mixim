@@ -100,6 +100,11 @@ public:
 	 **/
     virtual void initialize(int stage);
 
+    /** @brief Unregisters with ConnectionManager and unsubscribe to hostPos
+     *
+	 **/
+    virtual void finish();
+
     /**
      * @brief Called by Blackboard to inform of changes
      *
