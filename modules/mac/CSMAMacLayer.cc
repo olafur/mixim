@@ -67,12 +67,7 @@ void CSMAMacLayer::initialize(int stage)
     }
 }
 
-
-void CSMAMacLayer::finish() {
-	recordScalar("nbBackoffs", nbBackoffs);
-	recordScalar("backoffDurations", backoffValues);
-	recordScalar("nbTxFrames", nbTxFrames);
-
+CSMAMacLayer::~CSMAMacLayer() {
 	cancelAndDelete(backoffTimer);
 	cancelAndDelete(minorMsg);
 
@@ -82,6 +77,14 @@ void CSMAMacLayer::finish() {
         delete (*it);
     }
     macQueue.clear();
+}
+
+void CSMAMacLayer::finish() {
+	recordScalar("nbBackoffs", nbBackoffs);
+	recordScalar("backoffDurations", backoffValues);
+	recordScalar("nbTxFrames", nbTxFrames);
+
+
 }
 
 /**
@@ -244,6 +247,11 @@ void CSMAMacLayer::scheduleBackoff()
                   << macState << " radio state : " << phy->getRadioState() << endl;
     }
 
+    if(minorMsg->isScheduled()){
+		cancelEvent( minorMsg );
+		macState=RX;
+	}
+
     if(txAttempts > maxTxAttempts) {
         EV << " drop packet " << endl;
 
@@ -267,11 +275,6 @@ void CSMAMacLayer::scheduleBackoff()
 
         txAttempts++;
 		EV << " attempts so far: " << txAttempts  << " " << endl;
-
-		if(minorMsg->isScheduled()){
-			cancelEvent( minorMsg );
-			macState=RX;
-		}
 
 		nbBackoffs = nbBackoffs + 1;
 		backoffValues = backoffValues + time;
