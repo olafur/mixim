@@ -20,7 +20,7 @@
 
 #include <omnetpp.h>
 #include <BaseMobility.h>
-#include "TraceEvents_m.h"
+#include "TraceEv_m.h"
 
 
 /**
@@ -46,7 +46,7 @@ struct WAYPOINT_EVENT
 /**
  * Container for cached waypoint events read from a trace file.
  */
-typedef std::list < SetDestEvent > waypointEventsList;
+typedef std::list < SetDestEv > waypointEventsList;
 
 /**
  * @brief Trace mobility module. 
@@ -77,7 +77,7 @@ class TraceMobility : public BaseMobility
 
     /** @brief location update event */
     cMessage *_updateEvent;
-    SetDestEvent* _setdestEvent;
+    SetDestEv* _setdestEvent;
 
     /** @brief Current and target position of the host */
     Coord _currentPos, _targetPos;
@@ -105,7 +105,7 @@ class TraceMobility : public BaseMobility
   protected:
     virtual void makeMove();
     void scheduleNextWaypointEvent();
-    void setTarget(SetDestEvent* waypoint);
+    void setTarget(SetDestEv* waypoint);
 };
 
 #endif /* __TRACE_MOBILITY_INCLUDED__ */

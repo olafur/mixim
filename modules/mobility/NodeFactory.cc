@@ -168,13 +168,13 @@ void NodeFactory::handleMessage(cMessage * msg)
 {
     if (msg->getKind() == CREATE)
     {
-        CreateEvent *te = check_and_cast < CreateEvent * >(msg);
-        createNode(te);
+       CreateEv *te = check_and_cast<CreateEv *>(msg);
+       createNode(te);
         delete msg;
     }
     else if (msg->getKind() == DESTROY)
     {
-        DestroyEvent *te = check_and_cast < DestroyEvent * >(msg);
+        DestroyEv *te = check_and_cast<DestroyEv *>(msg);
         destroyNode(te);
         delete msg;
         if(_stopAfterLastDestroy && _destroyedCount == _initializedCount)
@@ -186,7 +186,7 @@ void NodeFactory::handleMessage(cMessage * msg)
     }
 }
 
-void NodeFactory::createNode(CreateEvent * event)
+void NodeFactory::createNode(CreateEv * event)
 {
     // Get the module type object from the given class name
     cModuleType *moduleType = 0;
@@ -270,7 +270,7 @@ void NodeFactory::createNode(CreateEvent * event)
  *
  * @todo This search could be more elegant.
  */
-void NodeFactory::destroyNode(DestroyEvent * event)
+void NodeFactory::destroyNode(DestroyEv * event)
 {
     cModule *module;
     NodeFactoryItem *item;
@@ -311,7 +311,7 @@ void NodeFactory::readSetdestTrace()
     }
     string line;
     TraceEntryParser tep;
-    TraceEvent *curEvent = NULL;
+    TraceEv *curEvent = NULL;
     int linecount = 1;
     simtime_t lastDestroyTime = 0;
     while (!std::getline(tracefilestream, line).eof())
@@ -339,15 +339,15 @@ void NodeFactory::readSetdestTrace()
                 {
                     throw cRuntimeError("Create: Node y coordinate out of bounds");
                 }
-                curEvent = new CreateEvent();
+                curEvent = new CreateEv();
                 curEvent->setKind(CREATE);
                 _initializedCount++;
                 curEvent->setTime(tep.time());
                 curEvent->setNodeID(atoi(tep.nodeID().c_str()));
-                ((CreateEvent *) curEvent)->setX(tep.x());
-                ((CreateEvent *) curEvent)->setY(tep.y());
-                ((CreateEvent *) curEvent)->setZ(tep.z());
-                ((CreateEvent *) curEvent)->setType(0);
+                ((CreateEv *) curEvent)->setX(tep.x());
+                ((CreateEv *) curEvent)->setY(tep.y());
+                ((CreateEv *) curEvent)->setZ(tep.z());
+                ((CreateEv *) curEvent)->setType(0);
                 _nodeIDs.insert(id);
                 scheduleAt(curEvent->getTime(), curEvent);
             }
@@ -362,7 +362,7 @@ void NodeFactory::readSetdestTrace()
                 {
                     throw cRuntimeError("setdest: Node y coordinate out of bounds");
                 }
-                SetDestEvent curWaypointEvent;
+                SetDestEv curWaypointEvent;
                 //WAYPOINT_EVENT curWaypointEvent;
                 curWaypointEvent.setTime(tep.time());
                 curWaypointEvent.setNodeID(atoi(tep.nodeID().c_str()));
@@ -387,7 +387,7 @@ void NodeFactory::readSetdestTrace()
                           tep.nodeID().c_str());
                 }
                 _nodeIDs.erase(id);
-                curEvent = new DestroyEvent();
+                curEvent = new DestroyEv();
                 curEvent->setKind(DESTROY);
                 curEvent->setTime(tep.time());
                 curEvent->setNodeID(atoi(tep.nodeID().c_str()));

@@ -61,7 +61,7 @@ void TraceMobility::handleSelfMsg(cMessage * msg)
     }
     else if (msg == _setdestEvent)
     {
-        SetDestEvent* wp = check_and_cast<SetDestEvent*>(_setdestEvent);
+        SetDestEv* wp = check_and_cast<SetDestEv*>(_setdestEvent);
         setTarget(wp);
         delete _setdestEvent;
         _setdestEvent = 0;
@@ -107,15 +107,15 @@ void TraceMobility::scheduleNextWaypointEvent()
 {
     if (!m_eventList.empty())
     {
-        SetDestEvent waypoint = m_eventList.front();
-        _setdestEvent = new SetDestEvent();
+        SetDestEv waypoint = m_eventList.front();
+        _setdestEvent = new SetDestEv();
         *_setdestEvent = waypoint;
         scheduleAt(_setdestEvent->getTime(), _setdestEvent);
         m_eventList.pop_front();
     }
 }
 
-void TraceMobility::setTarget(SetDestEvent* waypoint)
+void TraceMobility::setTarget(SetDestEv* waypoint)
 {
     simtime_t startTime = waypoint->getTime();
     if (startTime != simTime())

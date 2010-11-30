@@ -23,43 +23,47 @@
 // the various scripted events. This is the base message. See the derived
 // messages for further details.
 //
-message TraceEvent
+cplusplus {{
+#include <TraceEv_m.h>
+}}
+
+class TraceEv;
+
+message TraceEv
 {
-  fields:
     simtime_t time;
-    int nodeID;  
-}
+    int nodeID;
+};
 
 //
 // Create event signals a node creation. Used by NodeFactory.
 //
-message CreateEvent extends TraceEvent
+message CreateEv extends TraceEv
 {
-  fields:
     double x;
     double y;
     double z;
     string type;
     string name;
-}
+};
+
+
+//
+// Destroy event signals a node destruction. Used by NodeFactory.
+//
+message DestroyEv extends TraceEv
+{
+};
 
 //
 // SetDest sets a new destination for a mobile node of type 'TraceMobility'.
 //
-message SetDestEvent extends TraceEvent
+message SetDestEv extends TraceEv
 {
-  fields:
     double x;
     double y;
     double z;
     double speed;
     simtime_t timeAtDest;
-}
-
-//
-// Destroy event signals a node destruction. Used by NodeFactory.
-//
-message DestroyEvent extends TraceEvent
-{
-}
+};
 
