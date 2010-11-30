@@ -22,7 +22,7 @@
 #include <omnetpp.h>
 #include <string>
 #include "NodeFactoryItem.h"
-#include "TraceEvents_m.h"
+#include "TraceEv_m.h"
 #include "TraceMobility.h"
 
 using namespace std;
@@ -135,12 +135,13 @@ class NodeFactory:public cSimpleModule
     /** @brief Overrides of virtual base class functions. */
     virtual void finish();
     /** @brief Overrides of virtual base class functions. Handles create and destroy messages. */
-    virtual void handleMessage(cMessage * msg);
+    //virtual void handleMessage(cMessage * msg);
+    void handleMessage(cMessage * msg);
 
-    /** @brief Create a node. Triggered by a CreateEvent message */
-    void createNode(CreateEvent * event);
+    /** @brief Create a node. Triggered by a CreatEvent message */
+    void createNode(CreateEv * event);
     /** @brief Destroy a node. Triggered by a DestroyEvent message */
-    void destroyNode(DestroyEvent * event);
+    void destroyNode(DestroyEv * event);
 
     void readSetdestTrace();
     /** @brief Reads a setdest mobility trace. */

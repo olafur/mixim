@@ -26,7 +26,8 @@ NodeFactoryItem::NodeFactoryItem()
 
 NodeFactoryItem::NodeFactoryItem( cModule *module, int id, simtime_t createTime )
 {
-	NodeFactoryItem::NodeFactoryItem();
+	//NodeFactoryItem::NodeFactoryItem();
+	NodeFactoryItem();
 	m_module = module;
 	m_id = id;
 	m_tCreateTime = createTime;
