@@ -25,9 +25,8 @@
 //
 message TraceEvent
 {
-  fields:
     simtime_t time;
-    int nodeID;  
+    int nodeID;
 }
 
 //
@@ -35,7 +34,6 @@ message TraceEvent
 //
 message CreateEvent extends TraceEvent
 {
-  fields:
     double x;
     double y;
     double z;
@@ -48,7 +46,6 @@ message CreateEvent extends TraceEvent
 //
 message SetDestEvent extends TraceEvent
 {
-  fields:
     double x;
     double y;
     double z;

@@ -47,7 +47,7 @@ void TraceMobility::initialize(int stage)
 
 void TraceMobility::finish()
 {
-	  BaseMobility::finish();
+	BaseMobility::finish();
     cancelAndDelete(_setdestEvent);
     cancelAndDelete(_updateEvent);
 }

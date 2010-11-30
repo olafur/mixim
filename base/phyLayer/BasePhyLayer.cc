@@ -676,34 +676,32 @@ BasePhyLayer::~BasePhyLayer() {
 		delete decider;
 	}
 
-	/*
-	 * get a pointer to the radios RSAM again to avoid deleting it,
-	 * it is not created by calling new (BasePhyLayer is not the owner)!
-	 */
-	AnalogueModel* rsamPointer = radio->getAnalogueModel();
-
-	//free AnalogueModels
-	for(AnalogueModelList::iterator it = analogueModels.begin();
-		it != analogueModels.end(); it++) {
-
-		AnalogueModel* tmp = *it;
-
-		// do not delete the RSAM, it's not allocated by new!
-		if (tmp == rsamPointer)
-		{
-			rsamPointer = 0;
-			continue;
-		}
-
-		if(tmp != 0) {
-			delete tmp;
-		}
-	}
-
-
 	// free radio
 	if(radio != 0)
 	{
+		/*
+		 * get a pointer to the radios RSAM again to avoid deleting it,
+		 * it is not created by calling new (BasePhyLayer is not the owner)!
+		 */
+		AnalogueModel* rsamPointer = radio->getAnalogueModel();
+
+		//free AnalogueModels
+		for(AnalogueModelList::iterator it = analogueModels.begin();
+			it != analogueModels.end(); it++) {
+
+			AnalogueModel* tmp = *it;
+
+			// do not delete the RSAM, it's not allocated by new!
+			if (tmp == rsamPointer)
+			{
+				rsamPointer = 0;
+				continue;
+			}
+
+			if(tmp != 0) {
+				delete tmp;
+			}
+		}
 		delete radio;
 	}
 }
