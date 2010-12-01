@@ -46,7 +46,7 @@ struct WAYPOINT_EVENT
 /**
  * Container for cached waypoint events read from a trace file.
  */
-typedef std::list < SetDestEv > waypointEventsList;
+typedef std::list<SetDestEv> waypointEventsList;
 
 /**
  * @brief Trace mobility module. 
