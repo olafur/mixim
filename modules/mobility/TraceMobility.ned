@@ -22,7 +22,10 @@ simple TraceMobility extends BaseMobility
 {
   parameters:
       @class(TraceMobility);
+      x = default(-1);
+      y = default(-1);
+      z = default(-1);
       bool interpolate = default(false);  // Interpolate between waypoints or not
-      double updateInterval @unit("s") = default(0.1s);
+      double updateInterval @unit("s") = default(0.1s);      
 }
 
