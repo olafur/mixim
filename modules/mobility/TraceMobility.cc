@@ -3,18 +3,6 @@
 //                    Networks, KTH, Stockholm
 //           (C)      Kristjan Valur Jonsson, Reykjavik University, Reykjavik
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License version 3
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not see <http://www.gnu.org/licenses/>.
-//
 
 #include "TraceMobility.h"
 #include <FWMath.h>
@@ -24,179 +12,151 @@ Define_Module(TraceMobility);
 void TraceMobility::initialize(int stage)
 {
     BaseMobility::initialize(stage);
-    if (stage == 0)
-    {
-        //hostPtr = getParentModule();
-        //hostId = hostPtr->getId();
-    	  _currentPos = move.getStartPos();
-        _interpolate = par("interpolate").boolValue();
-        if (_interpolate)
-        {
-            _updateInterval = par("updateInterval");
+    if (stage == 0) {
+        moving = false;
+        interpolate = par("interpolate").boolValue();
+        if (interpolate) {
+            updateInterval = par("updateInterval");
         }
-        //_setdestEvent = new cMessage("setdestEvent");
-        _updateEvent = new cMessage("updateEvent");
-        // Whenever a move-update message and setdest are scheduled at the same time
-        // we want to process the move-update first (setdest messages have priority 0)
-        // message with smaller priority value is processed first
-        _updateEvent->setSchedulingPriority(-1);
-        _setdestEvent = 0;
+        updateEvent = new cMessage("updateEvent");
+        // we want move-update events to have a higher priority than any other
+        // events scheduled simultaneously.  This ensures that position is always
+        // updated before other events.
+        updateEvent->setSchedulingPriority(-1);
+    } else if (stage == 1) {
+        ev << "TraceMobility initialized at "<< move.getStartPos().info() << endl;
     }
-    ev << "TraceMobility initialized at "<<_currentPos.info()<<endl;
 }
 
 void TraceMobility::finish()
 {
-	BaseMobility::finish();
-    cancelAndDelete(_setdestEvent);
-    cancelAndDelete(_updateEvent);
+    BaseMobility::finish();
+    cancelAndDelete(updateEvent);
 }
 
-void TraceMobility::handleSelfMsg(cMessage * msg)
+void TraceMobility::handleSelfMsg(cMessage* msg)
 {
-    if (msg == _updateEvent)
-    {
-        makeMove();
-        updatePosition();
-    }
-    else if (msg == _setdestEvent)
-    {
-        SetDestEv* wp = check_and_cast<SetDestEv*>(_setdestEvent);
-        setTarget(wp);
-        delete _setdestEvent;
-        _setdestEvent = 0;
-    }
-    else
-    {
+    if (msg == updateEvent) {
+        if(moving) {
+            makeMove();
+            updatePosition();
+        } else {
+            startMoving();
+        }
+    } else {
         BaseMobility::handleMessage(msg);
     }
 }
 
 void TraceMobility::makeMove()
 {
-    _step++;
-    if (_step == _numSteps)
-    {
+    step++;
+    if (step == numSteps) {
         // Destination reached    
-        _currentPos = _targetPos;
+        move.setStart(targetPos);
         move.setSpeed(0);     
         move.setDirectionByVector(Coord(0,0));
-        ev << "Target " << _targetPos.info() << " reached, scheduling next waypoint" << endl;
-        scheduleNextWaypointEvent();
-    }
-    else if (_step < _numSteps)
-    {
+        ev << "Target " << targetPos.info()
+                   << " reached, scheduling next waypoint" << endl;
+        moving = false;
+        scheduleNextWaypoint();
+    } else if (step < numSteps) {
         // step forward
-    	  _currentPos = _stepTarget;
-        _stepTarget += _stepSize;
-        if (_updateEvent->isScheduled())
-            cancelEvent(_updateEvent);
-        if (_numSteps - _step == 1)
-            scheduleAt(_timeAtTarget, _updateEvent);
-        else
-            scheduleAt(simTime() + _updateInterval, _updateEvent);
-    }
-    else
-    {
-        throw cRuntimeError("_step > _numSteps in TraceMobility");
-    }
-    move.setStart(_currentPos, simTime());
-}
-
-void TraceMobility::scheduleNextWaypointEvent()
-{
-    if (!m_eventList.empty())
-    {
-        SetDestEv waypoint = m_eventList.front();
-        _setdestEvent = new SetDestEv();
-        *_setdestEvent = waypoint;
-        scheduleAt(_setdestEvent->getTime(), _setdestEvent);
-        m_eventList.pop_front();
+        move.setStart(stepTarget);
+        stepTarget += stepSize;
+        if (updateEvent->isScheduled()) {
+            cancelEvent(updateEvent);
+        }
+        if (numSteps - step == 1) {
+            scheduleAt(timeAtTarget, updateEvent);
+        } else {
+            scheduleAt(simTime() + updateInterval, updateEvent);
+        }
+    } else {
+        throw cRuntimeError("step > numSteps in TraceMobility");
     }
 }
 
-void TraceMobility::setTarget(SetDestEv* waypoint)
+void TraceMobility::scheduleNextWaypoint()
 {
-    simtime_t startTime = waypoint->getTime();
-    if (startTime != simTime())
-        throw cRuntimeError("Waypoint event is not now");
-    _timeAtTarget = waypoint->getTimeAtDest();
-    if (simTime() >= _timeAtTarget)
-        throw cRuntimeError("timeAtDest is in the past");
-   
+    if (!eventList.empty()) {
+        SetDestEv waypoint = eventList.front();
+        if(updateEvent->isScheduled()) {
+            throw cRuntimeError("Update event is already scheduled");
+        }
+        scheduleAt(waypoint.getTime(), updateEvent);
+    }
+}
+
+void TraceMobility::startMoving()
+{
+    if (eventList.empty()) {
+        throw cRuntimeError("No mobility events available!");
+    }
+    SetDestEv waypoint = eventList.front();
+    eventList.pop_front();
+    simtime_t now = simTime();
+    if (waypoint.getTime() != now) {
+        throw cRuntimeError("waypoint.getTime() != now");
+    }
+    if (waypoint.getTimeAtDest() < now) {
+        throw cRuntimeError("timeAtDest (%s) is in the past (now = %s)",
+                waypoint.getTimeAtDest().str().c_str(), now.str().c_str());
+    }
     // TODO implement 3D support
-    _targetPos = Coord(waypoint->getX(), waypoint->getY());
-    _step = 0;
-    if (_targetPos == _currentPos)
-    {
-        _numSteps = 0;
-        _speed = 0;
-        // No need to schedule mobility updates when we are stationary
-        move.setSpeed(_speed);
-        move.setDirectionByVector(Coord(0,0));
-        scheduleNextWaypointEvent();
-    }
-    else
-    {
-        if (simTime() == _timeAtTarget)
-            throw
-                cRuntimeError
-                ("simTime() == timeAtDest and destination is not same as current position");
-
-        _speed = _currentPos.distance(_targetPos) / (_timeAtTarget - simTime());
-        if( (waypoint->getSpeed() - _speed)*(waypoint->getSpeed() - _speed) > 0.01 ) {
-            ev << "waypoint->getSpeed()=" << waypoint->getSpeed() << ", _speed=" << _speed << endl;
-            throw cRuntimeError("Speed mismatch in tracefile");
-        }
-        move.setSpeed(_speed);
-        move.setDirectionByTarget(_targetPos);
+    targetPos = Coord(waypoint.getX(), waypoint.getY());
+    timeAtTarget = waypoint.getTimeAtDest();
+    step = 0;
+    if (targetPos == move.getStartPos()) {
+        numSteps = 1;
+        speed = 0;
+        moving = false;
+        scheduleNextWaypoint();
+    } else {
+        Coord pos = move.getStartPos();
+        speed = pos.distance(targetPos) / (timeAtTarget - now);
+        //if( (waypoint->getSpeed() - _speed)*(waypoint->getSpeed() - _speed) > 0.01 ) {
+        //    ev << "waypoint->getSpeed()=" << waypoint->getSpeed() 
+        //          << ", _speed=" << _speed << endl;
+        //    throw cRuntimeError("Speed mismatch in tracefile");
+        //}
+        move.setSpeed(speed);
+        move.setDirectionByTarget(targetPos);
+        moving = true;
         // calculate steps for interpolate or non-interpolate
-        if (!_interpolate)
-        {
-            _numSteps = 1;
-            if (_updateEvent->isScheduled())
-                cancelEvent(_updateEvent);
-            scheduleAt(_timeAtTarget, _updateEvent);
-        }
-        else
-        {
+        simtime_t nextEventTime;
+        if (!interpolate) {
+            numSteps = 1;
+            nextEventTime = timeAtTarget;
+        } else {
             // Get the number of steps needed to be covered.
-            simtime_t travelTime = _timeAtTarget - simTime();
-            _numSteps = static_cast < int >(ceil(travelTime.dbl() / _updateInterval));
-            simtime_t nextEventTime; 
-            if (_numSteps > 1)
-            {
-                _stepSize = (_targetPos - _currentPos) / _numSteps;
-                _stepTarget = _currentPos + _stepSize;
-                nextEventTime = simTime() + _updateInterval;
+            simtime_t travelTime = timeAtTarget - now;
+            numSteps = static_cast < int >(ceil(travelTime.dbl() / updateInterval));
+            if (numSteps > 1) {
+                stepSize = (targetPos - move.getStartPos()) / numSteps;
+                stepTarget = move.getStartPos() + stepSize;
+                nextEventTime = now + updateInterval;
+            } else {
+                nextEventTime = timeAtTarget;
             }
-            else if (_numSteps == 1)
-            {
-                nextEventTime = _timeAtTarget;
-            }
-            else
-            {
-                throw cRuntimeError("Number of steps less than 0");
-            }
-            if (_updateEvent->isScheduled())
-                cancelEvent(_updateEvent);
-            scheduleAt(nextEventTime, _updateEvent);
         }
+        if (updateEvent->isScheduled()) {
+            cancelEvent(updateEvent);
+        }
+        scheduleAt(nextEventTime, updateEvent);
+        ev << "Start moving from "<< move.getStartPos().info() << " to " 
+           << targetPos.info() << " in " << numSteps << " steps "
+           << " at speed=" << speed << endl;
     }
-    ev << "Start moving to " << _targetPos.info() 
-        << " in " << _numSteps << " steps "
-        << " at speed=" << _speed << endl;
 }
 
-void TraceMobility::initializeTrace(const waypointEventsList * eventList)
+void TraceMobility::initializeTrace(const waypointEventsList* el)
 {
     Enter_Method_Silent();
-
-    if (eventList == NULL)
+    if (el == NULL)
         return;
-
     // Copy the given event list to the internal list.
-    m_eventList.resize(eventList->size());
-    std::copy(eventList->begin(), eventList->end(), m_eventList.begin());
-    scheduleNextWaypointEvent();
+    eventList.resize(el->size());
+    std::copy(el->begin(), el->end(), eventList.begin());
+    scheduleNextWaypoint();
 }

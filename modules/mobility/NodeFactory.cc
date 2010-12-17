@@ -3,18 +3,6 @@
 //                    Networks, KTH, Stockholm
 //           (C)      Kristjan Valur Jonsson, Reykjavik University, Reykjavik
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License version 3
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not see <http://www.gnu.org/licenses/>.
-//
 
 #include "NodeFactory.h"
 #include "cstringtokenizer.h"
@@ -168,8 +156,8 @@ void NodeFactory::handleMessage(cMessage * msg)
 {
     if (msg->getKind() == CREATE)
     {
-       CreateEv *te = check_and_cast<CreateEv *>(msg);
-       createNode(te);
+        CreateEv *te = check_and_cast<CreateEv *>(msg);
+        createNode(te);
         delete msg;
     }
     else if (msg->getKind() == DESTROY)
@@ -179,8 +167,8 @@ void NodeFactory::handleMessage(cMessage * msg)
         delete msg;
         if(_stopAfterLastDestroy && _destroyedCount == _initializedCount)
         {
-        	if(!_createdItems.empty())
-        	    throw cRuntimeError("Stopping after last destroy but node vector not empty");
+            if(!_createdItems.empty())
+                throw cRuntimeError("Stopping after last destroy but node vector not empty");
             endSimulation();
         }
     }
@@ -246,11 +234,11 @@ void NodeFactory::createNode(CreateEv * event)
         }
         cModuleType *mobilityType = mobility->getModuleType();
         cModuleType *traceMobilityType = 
-            cModuleType::get("org.mixim.modules.mobility.TraceMobility");
+                cModuleType::get("org.mixim.modules.mobility.TraceMobility");
         if (mobilityType != traceMobilityType)
             throw
-                cRuntimeError
-                ("Node does not have mobility module of type org.mixim.modules.TraceMobility");
+            cRuntimeError
+            ("Node does not have mobility module of type org.mixim.modules.TraceMobility");
 
         waypointEventsList waypointList = _pendingWaypointsLists[event->getNodeID()];
         TraceMobility *tm = check_and_cast < TraceMobility * >(mobility);
@@ -297,7 +285,7 @@ void NodeFactory::destroyNode(DestroyEv * event)
         _destroyedCount++;
     else
         throw cRuntimeError("destroy error: Node %d has not been created (or already destroyed)",
-                            event->getNodeID());
+                event->getNodeID());
 }
 
 void NodeFactory::readSetdestTrace()
@@ -324,76 +312,76 @@ void NodeFactory::readSetdestTrace()
         switch (tep.command())
         {
         case CREATE:
+        {
+            int id = atoi(tep.nodeID().c_str());
+            if (_nodeIDs.count(id) != 0)
             {
-                int id = atoi(tep.nodeID().c_str());
-                if (_nodeIDs.count(id) != 0)
-                {
-                    throw cRuntimeError("Create error: Node %s already exists",
-                                        tep.nodeID().c_str());
-                }
-                if (tep.x() < 0 || tep.x() > _scenarioSizeX)
-                {
-                    throw cRuntimeError("Create: Node x coordinate out of bounds");
-                }
-                if (tep.y() < 0 || tep.y() > _scenarioSizeY)
-                {
-                    throw cRuntimeError("Create: Node y coordinate out of bounds");
-                }
-                curEvent = new CreateEv();
-                curEvent->setKind(CREATE);
-                _initializedCount++;
-                curEvent->setTime(tep.time());
-                curEvent->setNodeID(atoi(tep.nodeID().c_str()));
-                ((CreateEv *) curEvent)->setX(tep.x());
-                ((CreateEv *) curEvent)->setY(tep.y());
-                ((CreateEv *) curEvent)->setZ(tep.z());
-                ((CreateEv *) curEvent)->setType(0);
-                _nodeIDs.insert(id);
-                scheduleAt(curEvent->getTime(), curEvent);
+                throw cRuntimeError("Create error: Node %s already exists",
+                        tep.nodeID().c_str());
             }
-            break;
+            if (tep.x() < 0 || tep.x() > _scenarioSizeX)
+            {
+                throw cRuntimeError("Create: Node x coordinate out of bounds");
+            }
+            if (tep.y() < 0 || tep.y() > _scenarioSizeY)
+            {
+                throw cRuntimeError("Create: Node y coordinate out of bounds");
+            }
+            curEvent = new CreateEv();
+            curEvent->setKind(CREATE);
+            _initializedCount++;
+            curEvent->setTime(tep.time());
+            curEvent->setNodeID(atoi(tep.nodeID().c_str()));
+            ((CreateEv *) curEvent)->setX(tep.x());
+            ((CreateEv *) curEvent)->setY(tep.y());
+            ((CreateEv *) curEvent)->setZ(tep.z());
+            ((CreateEv *) curEvent)->setType(0);
+            _nodeIDs.insert(id);
+            scheduleAt(curEvent->getTime(), curEvent);
+        }
+        break;
         case SETDEST:
+        {
+            if (tep.x() < 0 || tep.x() > _scenarioSizeX)
             {
-                if (tep.x() < 0 || tep.x() > _scenarioSizeX)
-                {
-                    throw cRuntimeError("setdest: Node x coordinate out of bounds");
-                }
-                if (tep.y() < 0 || tep.y() > _scenarioSizeY)
-                {
-                    throw cRuntimeError("setdest: Node y coordinate out of bounds");
-                }
-                SetDestEv curWaypointEvent;
-                //WAYPOINT_EVENT curWaypointEvent;
-                curWaypointEvent.setTime(tep.time());
-                curWaypointEvent.setNodeID(atoi(tep.nodeID().c_str()));
-                curWaypointEvent.setSpeed(tep.speed());
-                curWaypointEvent.setX(tep.x());
-                curWaypointEvent.setY(tep.y());
-                curWaypointEvent.setZ(tep.z());
-                curWaypointEvent.setTimeAtDest(tep.timeAtDest());
-                if (_pendingWaypointsLists.count(curWaypointEvent.getNodeID()) == 0){
-                    waypointEventsList el;
-                    _pendingWaypointsLists[curWaypointEvent.getNodeID()] = el;
-                }
-                _pendingWaypointsLists[curWaypointEvent.getNodeID()].push_back(curWaypointEvent);
+                throw cRuntimeError("setdest: Node x coordinate out of bounds");
             }
-            break;
+            if (tep.y() < 0 || tep.y() > _scenarioSizeY)
+            {
+                throw cRuntimeError("setdest: Node y coordinate out of bounds");
+            }
+            SetDestEv curWaypointEvent;
+            //WAYPOINT_EVENT curWaypointEvent;
+            curWaypointEvent.setTime(tep.time());
+            curWaypointEvent.setNodeID(atoi(tep.nodeID().c_str()));
+            curWaypointEvent.setSpeed(tep.speed());
+            curWaypointEvent.setX(tep.x());
+            curWaypointEvent.setY(tep.y());
+            curWaypointEvent.setZ(tep.z());
+            curWaypointEvent.setTimeAtDest(tep.timeAtDest());
+            if (_pendingWaypointsLists.count(curWaypointEvent.getNodeID()) == 0){
+                waypointEventsList el;
+                _pendingWaypointsLists[curWaypointEvent.getNodeID()] = el;
+            }
+            _pendingWaypointsLists[curWaypointEvent.getNodeID()].push_back(curWaypointEvent);
+        }
+        break;
         case DESTROY:
+        {
+            int id = atoi(tep.nodeID().c_str());
+            if (_nodeIDs.count(id) != 1)
             {
-                int id = atoi(tep.nodeID().c_str());
-                if (_nodeIDs.count(id) != 1)
-                {
-                    error("Destroy error: Node %s not existing or already destroyed",
-                          tep.nodeID().c_str());
-                }
-                _nodeIDs.erase(id);
-                curEvent = new DestroyEv();
-                curEvent->setKind(DESTROY);
-                curEvent->setTime(tep.time());
-                curEvent->setNodeID(atoi(tep.nodeID().c_str()));
-                scheduleAt(curEvent->getTime(), curEvent);
+                error("Destroy error: Node %s not existing or already destroyed",
+                        tep.nodeID().c_str());
             }
-            break;
+            _nodeIDs.erase(id);
+            curEvent = new DestroyEv();
+            curEvent->setKind(DESTROY);
+            curEvent->setTime(tep.time());
+            curEvent->setNodeID(atoi(tep.nodeID().c_str()));
+            scheduleAt(curEvent->getTime(), curEvent);
+        }
+        break;
         default:
             throw cRuntimeError("Unknown command in tracefile");
         }
