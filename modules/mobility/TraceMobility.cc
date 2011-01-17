@@ -13,6 +13,10 @@ void TraceMobility::initialize(int stage)
 {
     BaseMobility::initialize(stage);
     if (stage == 0) {
+        nodeId = par("nodeId").longValue();
+        if (nodeId == -1) {
+            nodeId = this->getParentModule()->getId();
+        }
         moving = false;
         interpolate = par("interpolate").boolValue();
         if (interpolate) {

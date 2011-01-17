@@ -25,6 +25,7 @@ simple TraceMobility extends BaseMobility
       x = default(-1);
       y = default(-1);
       z = default(-1);
+      int nodeId = default(-1);	// Id of the node in the mobility tracefile
       bool interpolate = default(false);  // Interpolate between waypoints or not
       double updateInterval @unit("s") = default(0.1s);      
 }

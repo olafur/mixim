@@ -212,6 +212,8 @@ void NodeFactory::createNode(CreateEv * event)
     if (mobility != 0)
     {
         hasMobility = true;
+        if (mobility->hasPar("nodeId"))
+            mobility->par("nodeId") = event->getNodeID();
         if (mobility->hasPar("x"))
             mobility->par("x") = event->getX();
         if (mobility->hasPar("y"))

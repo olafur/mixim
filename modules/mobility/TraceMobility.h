@@ -35,6 +35,9 @@ typedef std::list<SetDestEv> waypointEventsList;
 class TraceMobility : public BaseMobility
 {
   protected:
+    /** @brief The ID of the node in the mobility tracefile */
+    int nodeId;
+
     /** @brief In interpolate mode the nodes interpolated between destinations
      * with in timesteps defined by the update period.  In non-interpolate mode
      * they just appear at the destinations at the time specified by the setdest 
@@ -68,6 +71,8 @@ class TraceMobility : public BaseMobility
     virtual void finish();
     /** @brief The message handler. */
     virtual void handleSelfMsg(cMessage* msg);
+
+    int getNodeId() const {return nodeId;}
 
     /** @brief Initialize the waypoint event list. Called by the 
                trace factory object upon creation of the node */
