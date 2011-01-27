@@ -305,3 +305,20 @@ Mapping* BaseDecider::calculateRSSIMapping(	simtime_t start,
 	return resultMap;
 }
 
+void BaseDecider::finish()
+{
+    // We have to cancel the message here because the BasePhyLayer does not
+    // store a reference to an outstanding channel sense request and since
+    // it does not have access to the 'currentChannelSenseRequest' member
+    // of this class.
+    if(currentChannelSenseRequest.first != 0) {
+        phy->cancelScheduledMessage(currentChannelSenseRequest.first);
+        currentChannelSenseRequest.first = 0;
+    }
+    isChannelIdle = true;
+    currentSignal.first = 0;
+    currentSignal.second = NEW;
+    currentChannelSenseRequest.first = 0;
+    currentChannelSenseRequest.second = -1;
+    currentChannelSenseRequest.canAnswerAt = -1;
+}

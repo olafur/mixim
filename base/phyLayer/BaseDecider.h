@@ -154,6 +154,12 @@ public:
 	 */
 	virtual simtime_t handleChannelSenseRequest(ChannelSenseRequest* request);
 
+   /**
+     * @brief Reset the decider.
+     */
+    virtual void finish();
+
+
 protected:
 	/**
 	 * @brief Processes a new Signal. Returns the time it wants to
