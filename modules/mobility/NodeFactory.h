@@ -1,7 +1,15 @@
+// ***************************************************************************
 // 
+// OppoNet Project
+// This file is a part of the opponet project, jointly managed by the
+// Laboratory for Communications Networks (LCN) at KTH in Stockholm, Sweden
+// and Reykjavik University, Iceland.
+//
 // Copyright (C) 2008 Olafur Ragnar Helgason, Laboratory for Communication 
 //                    Networks, KTH, Stockholm
 //           (C)      Kristjan Valur Jonsson, Reykjavik University, Reykjavik
+//
+// ***************************************************************************
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License version 3
@@ -15,6 +23,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not see <http://www.gnu.org/licenses/>.
 //
+// ***************************************************************************
 
 #ifndef __NODE_FACTORY_INCLUDED__
 #define __NODE_FACTORY_INCLUDED__

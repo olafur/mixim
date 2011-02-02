@@ -1,11 +1,32 @@
+// ***************************************************************************
 // 
+// OppoNet Project
+// This file is a part of the opponet project, jointly managed by the
+// Laboratory for Communications Networks (LCN) at KTH in Stockholm, Sweden
+// and Reykjavik University, Iceland.
+//
 // Copyright (C) 2008 Olafur Ragnar Helgason, Laboratory for Communication 
 //                    Networks, KTH, Stockholm
 //           (C)      Kristjan Valur Jonsson, Reykjavik University, Reykjavik
 //
+// ***************************************************************************
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License version 3
+// as published by the Free Software Foundation.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not see <http://www.gnu.org/licenses/>.
+//
+// ***************************************************************************
 
-#ifndef __TRACE_MOBILITY_INCLUDED__
-#define __TRACE_MOBILITY_INCLUDED__
+#ifndef _TRACE_MOBILITY_H_
+#define _TRACE_MOBILITY_H_
 
 #include <omnetpp.h>
 #include <BaseMobility.h>
@@ -85,4 +106,4 @@ class TraceMobility : public BaseMobility
     //void setTarget(double x, double y, simtime_t timeAtDest);
 };
 
-#endif /* __TRACE_MOBILITY_INCLUDED__ */
+#endif //_TRACE_MOBILITY_H_
