@@ -83,18 +83,20 @@ protected:
 	/**
 	 * @brief Return my application layer address
 	 *
-	 * We use the node module index as application address
+	 * If the node has a mobility module of type 'TraceMobility' we use the
+	 * nodeId from the mobility trace file.  Otherwise it returns the index
+	 * of the parent module
 	 **/
 	virtual const int myApplAddr() {
-	    cModule* parent = this->getParentModule();
+	    cModule* parent = getParentModule();
 	    cModule* mobility = parent->getSubmodule("mobility");
-	    if(!mobility) {
-	        throw cRuntimeError("Parent module does not have a mobility module");
+	    if(mobility) {
+	        TraceMobility *tm = dynamic_cast<TraceMobility *>(mobility);
+	        if(tm != 0) {
+	           return tm->getNodeId();
+	        }
 	    }
-	    // We assume that the mobility module is of type 'TraceMobility'
-	    TraceMobility *tm = check_and_cast < TraceMobility * >(mobility);
-	    return tm->getNodeId();
-		//return getParentModule()->getIndex();
+	    return parent->getIndex();
 	};
 
     int primaryDataIn, primaryDataOut;
