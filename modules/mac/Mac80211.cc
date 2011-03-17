@@ -55,6 +55,7 @@ void Mac80211::initialize(int stage)
         endSifs = new ChannelSenseRequest("end SIFS", MacToPhyInterface::CHANNEL_SENSE_REQUEST);
         endSifs->setSenseMode(UNTIL_BUSY);
         endSifs->setSenseTimeout(SIFS);
+        endSifs->setContextPointer(0);
 
         state = IDLE;
         longRetryCounter = 0;
@@ -221,6 +222,7 @@ cMessage *Mac80211::decapsMsg(Mac80211Pkt *frame) {
 void Mac80211::handleLowerMsg(cMessage *msg)
 {
     Mac80211Pkt *af = static_cast<Mac80211Pkt *>(msg);
+    EV << "handleLowerMsg " << msg->getName() << endl;
     int radioState = phy->getRadioState();
     if(radioState == Radio::RX) {
         // end of the reception
@@ -689,6 +691,7 @@ void Mac80211::handleEndSifsTimer()
 	if(!endSifs->getResult().isIdle()){
 		// delete the previously received frame
 		delete static_cast<Mac80211Pkt *>(endSifs->getContextPointer());
+		endSifs->setContextPointer(0);
 
 		// state in now IDLE or CONTEND
 		if (fromUpperLayer.empty())
@@ -717,6 +720,7 @@ void Mac80211::handleEndSifsTimer()
     }
 
     // don't need previous frame any more
+    endSifs->setContextPointer(0);
     delete frame;
 }
 

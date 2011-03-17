@@ -27,7 +27,7 @@
 #include "IControllable.h"
 #include "NicStateNotify.h"
 
-class NicController : public BaseLayer, IControllable
+class NicController : public BaseLayer, public IControllable
 {
 public:
     virtual void initialize(int stage);

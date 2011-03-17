@@ -136,6 +136,7 @@ bool PhyLayerControl::turnOff()
 
 void PhyLayerControl::handleUpperControlMessage(cMessage* msg)
 {
+    ev<<"PhyLayerControl received upper control "<<msg->getName()<<endl;
     switch(msg->getKind()) {
     case IControllable::TURN_ON:
         if(!isOn() && !isSleeping()) {

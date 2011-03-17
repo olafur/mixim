@@ -26,6 +26,7 @@
 #include <BaseModule.h>
 #include <TraceMobility.h>
 #include "IControllable.h"
+#include "NicController.h"
 #include "NicCommandNotify.h"
 
 class IDualRadioApp : public BaseModule {
@@ -51,6 +52,48 @@ public:
 
     virtual void receiveBBItem(int category, const BBItem *details, int scopeModuleId);
 
+    /**
+     * Convenience functions for sending to out-gates.
+     */
+    void sendPrimaryData(cMessage *msg);
+    void sendPrimaryControl(cMessage *msg);
+    void sendSecondaryData(cMessage *msg);
+    void sendSecondaryControl(cMessage *msg);
+
+    virtual void sendPrimaryXLControl(IControllable::Controls command);
+    virtual void sendSecondaryXLControl(IControllable::Controls command);
+
+    /**
+     * @brief Return my application layer address
+     *
+     * If the node has a mobility module of type 'TraceMobility' we use the
+     * nodeId from the mobility trace file.  Otherwise it returns the index
+     * of the parent module
+     **/
+    virtual const int myApplAddr() {
+        cModule* parent = getParentModule();
+        cModule* mobility = parent->getSubmodule("mobility");
+        if(mobility) {
+            TraceMobility *tm = dynamic_cast<TraceMobility *>(mobility);
+            if(tm != 0) {
+               return tm->getNodeId();
+            }
+        }
+        return parent->getIndex();
+    };
+
+    /**
+     * @brief Return a pointer to the primary interface.  Returns 0 if the
+     * interface is not controllable.
+     */
+    virtual IControllable* getPrimaryIface() const {return primaryController;};
+
+    /**
+     * @brief Return a pointer to the secondary interface.  Returns 0 if the
+     * interface is not controllable.
+     */
+    virtual IControllable* getSecondaryIface() const {return secondaryController;};
+
 protected:
 
     /** @brief Handle self messages such as timer... */
@@ -69,36 +112,6 @@ protected:
 	/** @brief Called when the state of the secondary NIC changes */
 	virtual void secondaryNicStateUpdate(IControllable::Status newState) = 0;
 
-	/**
-	 * Convenience functions for sending to out-gates.
-	 */
-	void sendPrimaryData(cMessage *msg);
-	void sendPrimaryControl(cMessage *msg);
-	void sendSecondaryData(cMessage *msg);
-	void sendSecondaryControl(cMessage *msg);
-
-	virtual void sendPrimaryXLControl(IControllable::Controls command);
-	virtual void sendSecondaryXLControl(IControllable::Controls command);
-
-	/**
-	 * @brief Return my application layer address
-	 *
-	 * If the node has a mobility module of type 'TraceMobility' we use the
-	 * nodeId from the mobility trace file.  Otherwise it returns the index
-	 * of the parent module
-	 **/
-	virtual const int myApplAddr() {
-	    cModule* parent = getParentModule();
-	    cModule* mobility = parent->getSubmodule("mobility");
-	    if(mobility) {
-	        TraceMobility *tm = dynamic_cast<TraceMobility *>(mobility);
-	        if(tm != 0) {
-	           return tm->getNodeId();
-	        }
-	    }
-	    return parent->getIndex();
-	};
-
     int primaryDataIn, primaryDataOut;
 	int primaryControlIn, primaryControlOut;
 
@@ -106,6 +119,9 @@ protected:
     int secondaryControlIn, secondaryControlOut;
 
     int primaryNicId, secondaryNicId;
+
+    NicController* primaryController;
+    NicController* secondaryController;
 
     /** @brief Blackboard category for state update notifications */
     int catNicStateNotify;

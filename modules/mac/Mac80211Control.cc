@@ -91,7 +91,6 @@ void Mac80211Control::initialize(int stage) {
 bool Mac80211Control::turnOn()
 {
 
-    ev << "Mac80211Control Received a TURN_ON" << endl;
     if (isOn()) {
         throw cRuntimeError("Trying to turn ON interface while already ON");
         return false;
@@ -103,12 +102,12 @@ bool Mac80211Control::turnOn()
 	remainingBackoff = backoff();
 	senseChannelWhileIdle(remainingBackoff + currentIFS);
 	status = IControllable::TURNED_ON;
+	ev << "Mac80211Control is now TURNED_ON" << endl;
 	return true;
 }
 
 bool Mac80211Control::turnOff()
 {
-    ev << "Mac80211Control Received a TURN_OFF";
     if(status == IControllable::TURNED_OFF) {
         throw cRuntimeError("Trying to turn OFF while already OFF");
         return false;
@@ -118,7 +117,16 @@ bool Mac80211Control::turnOff()
 	cancelEvent(timeout);
 	cancelEvent(nav);
 	if(contention) cancelEvent(contention);
-	if(endSifs) cancelEvent(endSifs);
+	if(endSifs) {
+	    // Data frames, RTS and CTS frames are stored in the context pointer
+	    // and deleted when an ACK arrivves (or timeout).  We need to delete
+	    // these stored frames here or else they are never freed up.
+	    if (endSifs->getContextPointer()) {
+	        delete static_cast<Mac80211Pkt *>(endSifs->getContextPointer());
+	        endSifs->setContextPointer(0);
+	    }
+	    cancelEvent(endSifs);
+	}
 	// Silently drop and delete all packets from above
 	MacPktList::iterator it;
 	for(it = fromUpperLayer.begin(); it != fromUpperLayer.end(); ++it) {
@@ -131,11 +139,13 @@ bool Mac80211Control::turnOff()
     shortRetryCounter = 0;
     currentIFS = EIFS;
     status = IControllable::TURNED_OFF;
+    ev << "Mac80211Control is now TURNED_OFF" << endl;
     return true;
 }
 
 void Mac80211Control::handleUpperControl(cMessage* msg) {
-	switch(msg->getKind()) {
+	ev<<"Mac80211Control received upper control "<<msg->getName()<<endl;
+    switch(msg->getKind()) {
 	case (IControllable::TURN_ON):
 	{
 	    internalState = WAITING_FOR_PHY_ON;
@@ -144,9 +154,6 @@ void Mac80211Control::handleUpperControl(cMessage* msg) {
 	break;
 	case (IControllable::TURN_OFF):
 	{
-		if(turnOff() == false) {
-		    throw cRuntimeError("Could not turn off MAC80211");
-		}
 		internalState = WAITING_FOR_PHY_OFF;
 		sendControlDown(msg);
 	}
@@ -175,6 +182,7 @@ void Mac80211Control::handleUpperControl(cMessage* msg) {
 }
 
 void Mac80211Control::handleLowerControl(cMessage *msg) {
+    ev<<"Mac80211Control received lower control "<<msg->getName()<<endl;
 	switch(msg->getKind()) {
 	case (IControllable::TURNED_ON):
 	{
@@ -193,7 +201,9 @@ void Mac80211Control::handleLowerControl(cMessage *msg) {
 	    if (internalState != WAITING_FOR_PHY_OFF) {
 	        throw cRuntimeError("Received TURNED_OFF from PHY but not WAITING_FOR_PHY_OFF");
         }
-	    assert(status == IControllable::TURNED_OFF);
+	    if(turnOff() == false) {
+	        throw cRuntimeError("Could not turn off MAC80211");
+        }
 	    internalState = IDLE;
 		sendControlUp(msg);
 	}

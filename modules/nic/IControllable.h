@@ -28,13 +28,14 @@
  */
 class IControllable {
 public:
-    enum Controls {TURN_ON, SLEEP, WAKE_UP, TURN_OFF};
-    enum Status {TURNED_ON, SLEEPING, TURNED_OFF};
+    enum Controls {TURN_ON=100, SLEEP, WAKE_UP, TURN_OFF};
+    enum Status {TURNED_ON=200, SLEEPING, TURNED_OFF};
 
     virtual ~IControllable() {};
     virtual bool isOn() {return status == TURNED_ON;};
     virtual bool isSleeping() {return status == SLEEPING;};
     virtual bool isOff() {return status == TURNED_OFF;};
+    virtual Status getStatus() const {return status;}
 
 protected:
     /** @brief Turns the component on. Returns true on success.*/

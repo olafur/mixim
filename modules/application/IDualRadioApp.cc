@@ -21,7 +21,6 @@
 // ***************************************************************************
 
 #include "IDualRadioApp.h"
-#include "NicController.h"
 
 // ----------------- Public member functions ----------------------------------
 
@@ -52,12 +51,13 @@ void IDualRadioApp::initialize(int stage)
         }
         cModule* nicController = primaryNic->getSubmodule("nicController");
         if (nicController != 0) {
-            NicController* nicCtrl = check_and_cast<NicController*>(nicController);
-            if(nicController == 0) {
+            primaryController = check_and_cast<NicController*>(nicController);
+            if(primaryController == 0) {
                 throw cRuntimeError("Could not find module primary 'nicController' in IDualRadioApp");
             }
-            primaryNicId = nicCtrl->getNicId();
+            primaryNicId = primaryController->getNicId();
         } else {
+            primaryController = 0;
             primaryNicId = -1;
         }
 
@@ -67,12 +67,13 @@ void IDualRadioApp::initialize(int stage)
         }
         nicController = secondaryNic->getSubmodule("nicController");
         if(nicController != 0) {
-            NicController* nicCtrl = check_and_cast<NicController*>(nicController);
-            if(nicController == 0) {
+            secondaryController = check_and_cast<NicController*>(nicController);
+            if(secondaryController == 0) {
                 throw cRuntimeError("Could not find module secondary 'nicController' in IDualRadioApp");
             }
-            secondaryNicId = nicCtrl->getNicId();
+            secondaryNicId = secondaryController->getNicId();
         } else {
+            secondaryController = 0;
             secondaryNicId = -1;
         }
 
@@ -83,23 +84,6 @@ void IDualRadioApp::initialize(int stage)
         // Obtain category for publishing nic commands on
         NicCommandNotify nicCommandNotify;
         catNicCommandNotify = utility->getCategory(&nicCommandNotify);
-    }
-}
-
-void IDualRadioApp::handleMessage(cMessage* msg)
-{
-    if (msg->isSelfMessage()){
-        handleSelfMsg(msg);
-    } else if(msg->getArrivalGateId() == primaryDataIn) {
-        handlePrimaryData(msg);
-    } else if(msg->getArrivalGateId() == primaryControlIn) {
-        handlePrimaryControl(msg);
-    } else if(msg->getArrivalGateId() == secondaryDataIn) {
-        handleSecondaryData(msg);
-    } else if(msg->getArrivalGateId() == secondaryControlIn) {
-        handleSecondaryControl(msg);
-    } else {
-        throw cRuntimeError("Received message on unknown gate %d", msg->getArrivalGateId());
     }
 }
 
@@ -117,8 +101,6 @@ void IDualRadioApp::receiveBBItem(int category, const BBItem *details, int scope
     }
     BaseModule::receiveBBItem(category, details, scopeModuleId);
 }
-
-// ----------------- Protected member functions -------------------------------
 
 void IDualRadioApp::sendPrimaryData(cMessage *msg)
 {
@@ -160,4 +142,23 @@ void IDualRadioApp::sendSecondaryXLControl(IControllable::Controls command)
     nicCommandNotify.command = command;
     nicCommandNotify.nicId = secondaryNicId;
     utility->publishBBItem(catNicCommandNotify, &nicCommandNotify, findHost()->getId());
+}
+
+// ----------------- Protected member functions -------------------------------
+
+void IDualRadioApp::handleMessage(cMessage* msg)
+{
+    if (msg->isSelfMessage()){
+        handleSelfMsg(msg);
+    } else if(msg->getArrivalGateId() == primaryDataIn) {
+        handlePrimaryData(msg);
+    } else if(msg->getArrivalGateId() == primaryControlIn) {
+        handlePrimaryControl(msg);
+    } else if(msg->getArrivalGateId() == secondaryDataIn) {
+        handleSecondaryData(msg);
+    } else if(msg->getArrivalGateId() == secondaryControlIn) {
+        handleSecondaryControl(msg);
+    } else {
+        throw cRuntimeError("Received message on unknown gate %d", msg->getArrivalGateId());
+    }
 }
