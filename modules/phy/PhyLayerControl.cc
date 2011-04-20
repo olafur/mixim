@@ -60,8 +60,7 @@ void PhyLayerControl::receiveBBItem(int category, const BBItem *details, int sco
         Move m(*static_cast<const Move*>(details));
         // We only update the position of the node in the ConnectionManager
         // if the interface is turned on.  When the nic is turned off it is
-        // registered in the ConnectionManager and invisible to other nic's.
-
+        // unregistered from the ConnectionManager and invisible to other nic's.
         if (isOn()) {
             if(isRegistered) {
                 cc->updateNicPos(getParentModule()->getId(), &m.getStartPos());

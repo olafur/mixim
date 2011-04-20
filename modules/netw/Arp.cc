@@ -36,7 +36,10 @@ int Arp::getMacAddr(const int netwAddr)
 {
     Enter_Method_Silent();
     cModule* remoteNetwLayer = simulation.getModule( netwAddr );
-    assert(remoteNetwLayer != 0);
+    if (remoteNetwLayer == 0) {
+        throw cRuntimeError("Module with id %d (i.e. network address) "
+                "not found in simulation", netwAddr);
+    }
     //cModule* remoteHost = remoteNetwLayer->getParentModule();
     cModule* currentLayer = remoteNetwLayer;
     BaseMacLayer* mac = 0;
