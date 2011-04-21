@@ -72,39 +72,33 @@ cMessage* BaseNetwLayer::decapsMsg(NetwPkt *msg)
 NetwPkt* BaseNetwLayer::encapsMsg(cPacket *appPkt) {
     int macAddr;
     int netwAddr;
-
     EV <<"in encaps...\n";
-
-    NetwPkt *pkt = new NetwPkt(appPkt->getName(), appPkt->getKind());
-    pkt->setBitLength(headerLength);
-
     NetwControlInfo* cInfo = dynamic_cast<NetwControlInfo*>(appPkt->removeControlInfo());
-
-    if(cInfo == 0){
-	EV << "warning: Application layer did not specifiy a destination L3 address\n"
-	   << "\tusing broadcast address instead\n";
-	netwAddr = L3BROADCAST;
-    } else {
-	EV <<"CInfo removed, netw addr="<< cInfo->getNetwAddr()<<endl;
-        netwAddr = cInfo->getNetwAddr();
-	delete cInfo;
-    }
-
-    pkt->setSrcAddr(myNetwAddr);
-    pkt->setDestAddr(netwAddr);
-    EV << " netw "<< myNetwAddr << " sending packet" <<endl;
-    if(netwAddr == L3BROADCAST) {
+    if(cInfo == 0) {
+        EV << "warning: Application layer did not specifiy a destination L3 address\n"
+                << "\tusing broadcast address instead\n";
+        netwAddr = L3BROADCAST;
         EV << "sendDown: nHop=L3BROADCAST -> message has to be broadcasted"
            << " -> set destMac=L2BROADCAST\n";
         macAddr = L2BROADCAST;
-    }
-    else{
+    } else {
+        EV <<"CInfo removed, netw addr="<< cInfo->getNetwAddr()<<endl;
+        netwAddr = cInfo->getNetwAddr();
+        delete cInfo;
         EV <<"sendDown: get the MAC address\n";
         macAddr = arp->getMacAddr(netwAddr);
+        if(macAddr < 0){
+            EV << "MAC address not found for netw address " <<netwAddr<< endl;
+            return 0;
+        }
     }
 
+    NetwPkt *pkt = new NetwPkt(appPkt->getName(), appPkt->getKind());
+    pkt->setBitLength(headerLength);
+    pkt->setSrcAddr(myNetwAddr);
+    pkt->setDestAddr(netwAddr);
+    EV << " netw "<< myNetwAddr << " sending packet" <<endl;
     pkt->setControlInfo(new NetwToMacControlInfo(macAddr));
-
     //encapsulate the application packet
     pkt->encapsulate(appPkt);
     EV <<" pkt encapsulated\n";
@@ -139,7 +133,12 @@ void BaseNetwLayer::handleLowerMsg(cMessage* msg)
 void BaseNetwLayer::handleUpperMsg(cMessage* msg)
 {
 	assert(dynamic_cast<cPacket*>(msg));
-    sendDown(encapsMsg(static_cast<cPacket*>(msg)));
+	NetwPkt* pkt = encapsMsg(static_cast<cPacket*>(msg));
+	if(pkt) {
+	    sendDown(pkt);
+	} else {
+	    delete msg;
+	}
 }
 
 /**

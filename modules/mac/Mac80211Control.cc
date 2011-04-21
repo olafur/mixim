@@ -99,6 +99,16 @@ bool Mac80211Control::turnOn()
         throw cRuntimeError("Received TURN_ON while waiting for phy to become ready");
         return false;
     }
+    if (contention == 0) {
+        contention = new ChannelSenseRequest("contention", MacToPhyInterface::CHANNEL_SENSE_REQUEST);
+        contention->setSenseMode(UNTIL_BUSY);
+    }
+    if(endSifs == 0){
+        endSifs = new ChannelSenseRequest("end SIFS", MacToPhyInterface::CHANNEL_SENSE_REQUEST);
+        endSifs->setSenseMode(UNTIL_BUSY);
+        endSifs->setSenseTimeout(SIFS);
+        endSifs->setContextPointer(0);
+    }
 	remainingBackoff = backoff();
 	senseChannelWhileIdle(remainingBackoff + currentIFS);
 	status = IControllable::TURNED_ON;
@@ -116,17 +126,23 @@ bool Mac80211Control::turnOff()
 	// Cancel all timers
 	cancelEvent(timeout);
 	cancelEvent(nav);
-	if(contention) cancelEvent(contention);
 	if(endSifs) {
 	    // Data frames, RTS and CTS frames are stored in the context pointer
-	    // and deleted when an ACK arrivves (or timeout).  We need to delete
+	    // and deleted when an ACK arrives (or timeout).  We need to delete
 	    // these stored frames here or else they are never freed up.
 	    if (endSifs->getContextPointer()) {
 	        delete static_cast<Mac80211Pkt *>(endSifs->getContextPointer());
 	        endSifs->setContextPointer(0);
 	    }
 	    cancelEvent(endSifs);
+	    delete endSifs;
+	    endSifs = 0;
 	}
+	if(contention) {
+	    cancelEvent(contention);
+        delete contention;
+        contention = 0;
+    }
 	// Silently drop and delete all packets from above
 	MacPktList::iterator it;
 	for(it = fromUpperLayer.begin(); it != fromUpperLayer.end(); ++it) {
