@@ -20,6 +20,7 @@
 <dir makemake-options="--deep --make-so -o miximbase -O out --meta:export-library --meta:use-exported-libs" path="base" type="makemake"/>
 <dir makemake-options="-o coord -O out -u CMDENV -lmiximbase -lmiximmodules -lmiximtestUtils --meta:auto-include-path --meta:export-library --meta:use-exported-libs" path="tests/coord" type="makemake"/>
 <dir makemake-options="-o multiConnectionManager -O out -lmiximbase -lmiximmodules --meta:auto-include-path --meta:export-library --meta:use-exported-libs" path="examples/multiConnectionManager" type="makemake"/>
+<dir makemake-options="-o dualRadio -O out -lmiximbase -lmiximmodules --meta:auto-include-path --meta:export-library --meta:use-exported-libs" path="examples/dualRadio" type="makemake"/>
 <dir makemake-options="-o deviceTest -O out -u CMDENV -lpowerTestUtils -lmiximbase -lmiximmodules --meta:auto-include-path --meta:export-library --meta:use-exported-libs" path="tests/power/deviceTest" type="makemake"/>
 <dir makemake-options="-o basePhyLayer -O out -u CMDENV -lmiximbase -lmiximmodules -lmiximtestUtils --meta:auto-include-path --meta:export-library --meta:use-exported-libs" path="tests/basePhyLayer" type="makemake"/>
 <dir makemake-options="-o decider -O out -u CMDENV -lmiximbase -lmiximmodules -lmiximtestUtils --meta:auto-include-path --meta:export-library --meta:use-exported-libs" path="tests/decider" type="makemake"/>

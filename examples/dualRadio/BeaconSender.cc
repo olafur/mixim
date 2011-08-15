@@ -214,7 +214,7 @@ void BeaconSender::sendBeacon()
     pkt->setSrcAddr( myApplAddr() );
     pkt->setBitLength(headerLength);
     pkt->setHPNetworkAddress(getSecondaryNetworkAddress());
-    pkt->setControlInfo( new NetwControlInfo(L3BROADCAST) );
+    //pkt->setControlInfo( new NetwControlInfo(L3BROADCAST) );
     ev << "host" << myApplAddr() << " sending beacon.\n";
     sendPrimaryData(pkt);
 }

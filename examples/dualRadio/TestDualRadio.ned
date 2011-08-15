@@ -22,6 +22,7 @@
 
 package org.mixim.examples.dualRadio;
 
+import org.mixim.examples.dualRadio.SimpleConnectionManager;
 import org.mixim.base.modules.BaseWorldUtility;
 import org.mixim.modules.mobility.NodeFactory;
 
