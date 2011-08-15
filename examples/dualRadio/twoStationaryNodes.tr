@@ -1,0 +1,4 @@
+0.6 create 1 10.0 0.0 0.0 
+0.7 create 2 12.0 0.0 0.0 
+64.2 destroy 2 
+64.2 destroy 1 
